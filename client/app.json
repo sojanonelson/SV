@@ -1,0 +1,37 @@
+{
+  "expo": {
+    "name": "SV Bill",
+    "slug": "client",
+    "version": "2.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "light",
+    "newArchEnabled": true,
+    "splash": {
+      "image": "./assets/splash-icon.png",
+      "resizeMode": "contain",
+      "backgroundColor": "#ffffff"
+    },
+    "ios": {
+      "supportsTablet": true
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#ffffff"
+      },
+      "edgeToEdgeEnabled": true,
+      "package": "com.sv.svbills"
+    },
+    "web": {
+      "favicon": "./assets/favicon.png"
+    },
+    "extra": {
+      "API_URL": "http://172.29.5.4:5000/api",
+      "APP_VERSION":"v1.0.0",
+      "eas": {
+        "projectId": "3449ada1-eebf-4cd8-8352-83ee27977b9c"
+      }
+    }
+  }
+}
