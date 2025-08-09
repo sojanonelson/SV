@@ -7,6 +7,7 @@ const partyController = require('../controllers/partyController');
 
 router.post('/', partyController.createParty);
 router.get('/', partyController.getParties);
+router.get('/getById/:id', partyController.getPartyById);
 router.put('/:id', partyController.updateParty);
 router.delete('/:id', partyController.deleteParty);
 
