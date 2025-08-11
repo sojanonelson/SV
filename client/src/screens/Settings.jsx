@@ -146,19 +146,7 @@ const Settings = () => {
               />
             </View>
           </View>
-          <View style={styles.inputGroup}>
-            <View style={styles.labelContainer}>
-              <Ionicons name="cloud-upload" size={16} color="#6B7280" />
-              <Text style={styles.label}>Logo URL</Text>
-            </View>
-            <TextInput
-              style={styles.input}
-              value={formData.logo}
-              onChangeText={(text) => handleChange('logo', text)}
-              placeholder="Logo URL"
-              keyboardType="url"
-            />
-          </View>
+        
           <View style={styles.buttonContainer}>
             <Button
               onPress={handleSubmit}

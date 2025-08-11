@@ -27,7 +27,7 @@
       "favicon": "./assets/favicon.png"
     },
     "extra": {
-      "API_URL": "http://172.29.5.4:5000/api",
+      "API_URL": "http://10.174.248.114:5000/api",
       "APP_VERSION":"v1.0.0",
       "eas": {
         "projectId": "3449ada1-eebf-4cd8-8352-83ee27977b9c"

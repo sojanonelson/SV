@@ -92,13 +92,13 @@ function PartyList() {
             <Text style={styles.dropdownText}>View Invoices</Text>
           </TouchableOpacity>
           
-          <TouchableOpacity
+          {/* <TouchableOpacity
             style={styles.dropdownItem}
             onPress={() => handleMenuAction('edit', party)}
           >
             <Ionicons name="create-outline" size={20} color="#F59E0B" />
             <Text style={styles.dropdownText}>Edit Party</Text>
-          </TouchableOpacity>
+          </TouchableOpacity> */}
           
           <TouchableOpacity
             style={[styles.dropdownItem, styles.dropdownItemLast]}

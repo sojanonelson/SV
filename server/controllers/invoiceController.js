@@ -15,34 +15,36 @@ exports.createInvoice = async (req, res) => {
     const invoiceItems = [];
     
     for (const item of items) {
-      const product = await Product.findOne({ _id: item.productId});
+      const product = await Product.findOne({ _id: item.productId });
       if (!product) {
         return res.status(404).json({ message: `Product not found: ${item.productId}` });
       }
       
-      const itemTotal = item.quantity * product.price;
-      const itemDiscount = item.discount || 0;
-      subtotal += itemTotal - itemDiscount;
+      const itemTotalWithoutDiscount = item.quantity * product.price;
+      const discountAmount = (itemTotalWithoutDiscount * (item.discount || 0)) / 100;
+      const itemTotal = itemTotalWithoutDiscount - discountAmount;
+      
+      subtotal += itemTotal;
       
       invoiceItems.push({
         productId: product._id,
         name: product.name,
         quantity: item.quantity,
         price: product.price,
-        discount: itemDiscount,
-        total: itemTotal - itemDiscount
+        discount: item.discount || 0,
+        discountAmount: discountAmount,
+        total: itemTotal
       });
     }
-    console.log("INV:", invoiceItems )
 
-    const total = subtotal + (invoiceData.tax || 0);
+    const taxAmount = (subtotal * (invoiceData.tax || 0)) / 100;
+    const total = subtotal + taxAmount;
 
     const invoiceCount = await Invoice.countDocuments({ companyId: req.companyId });
     const invoiceNumber = `INV-${(invoiceCount + 1).toString().padStart(5, '0')}`;
 
     const invoice = new Invoice({
       ...invoiceData,
-    
       invoiceNumber,
       partyId,
       partyName: party.name,

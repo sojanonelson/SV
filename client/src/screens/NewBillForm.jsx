@@ -55,32 +55,43 @@ function NewBillForm({ navigation }) {
     fetchData();
   }, []);
 
-  const calculateTotal = () => {
-    let subtotal = 0;
-    selectedProducts.forEach((item) => {
-      const product =
-        products.find((p) => p._id === item.productId) || item.newProduct;
-      if (product && !isNaN(product.price)) {
-        const itemTotalWithoutDiscount = item.quantity * product.price;
-        const discountAmount = (itemTotalWithoutDiscount * (item.discount || 0)) / 100;
-        const itemTotal = itemTotalWithoutDiscount - discountAmount;
-        subtotal += itemTotal;
-      }
-    });
-    
-    // Add tax (assuming tax is a percentage)
-    const taxAmount = (subtotal * (formData.tax || 0)) / 100;
-    return subtotal + taxAmount;
-  };
+ const calculateItemTotal = (item) => {
+  const product = products.find((p) => p._id === item.productId) || item.newProduct;
+  if (!product || isNaN(product.price)) return 0;
+  
+  const itemTotalWithoutDiscount = item.quantity * product.price;
+  const discountAmount = (itemTotalWithoutDiscount * (item.discount || 0)) / 100;
+  return itemTotalWithoutDiscount - discountAmount;
+};
 
-  const calculateItemTotal = (item) => {
-    const product = products.find((p) => p._id === item.productId) || item.newProduct;
-    if (!product || isNaN(product.price)) return 0;
-    
-    const itemTotalWithoutDiscount = item.quantity * product.price;
-    const discountAmount = (itemTotalWithoutDiscount * (item.discount || 0)) / 100;
-    return itemTotalWithoutDiscount - discountAmount;
-  };
+const calculateTotal = () => {
+  let subtotal = 0;
+  selectedProducts.forEach((item) => {
+    subtotal += calculateItemTotal(item);
+  });
+  
+  // Add tax (assuming tax is a percentage)
+  const taxAmount = (subtotal * (formData.tax || 0)) / 100;
+  return subtotal + taxAmount;
+};
+
+
+const handleReset = async () => {
+  setFormData({
+    partyId: "",
+    tax: 0,
+    discount: 0,
+    paymentStatus: "unpaid",
+    partyName: "",
+    partyPhone: "",
+    partyPlace: "",
+  })
+
+  setCurrentProductIndex(0)
+  
+  setSelectedProducts([])
+
+}
 
   const handleAddProduct = () => {
     setSelectedProducts([
@@ -157,56 +168,107 @@ function NewBillForm({ navigation }) {
     }
   };
 
-  const handleSubmit = async () => {
-    setError("");
-    setSuccess("");
-    if (useExistingParty && !formData.partyId)
-      return setError("Select a party");
-    if (!useExistingParty && (!formData.partyName || !formData.partyPhone))
-      return setError("Enter party details");
-    if (selectedProducts.length === 0)
-      return setError("Add at least one product");
-    try {
-      let partyId = formData.partyId;
-      if (!useExistingParty) {
-        const partyResponse = await createParty({
-          name: formData.partyName,
-          phoneNumber: formData.partyPhone,
-          place: formData.partyPlace,
-        });
-        partyId = partyResponse._id;
-      }
-      const invoiceData = {
-        partyId,
-        tax: formData.tax,
-        paymentStatus: formData.paymentStatus,
-        items: selectedProducts.map((item) => ({
-          productId: item.productId,
-          quantity: item.quantity,
-          discount: item.discount || 0,
-          price: (products.find(p => p._id === item.productId) || item.newProduct)?.price,
-          name: (products.find(p => p._id === item.productId)?.name || item.name),
-          total: calculateItemTotal(item)
-        })),
-      };
-      const response = await createInvoice(invoiceData);
-      setSuccess("Invoice created successfully!");
-      if (response._id)
-        navigation.navigate("InvoiceDetail", { id: response._id });
-    } catch (err) {
-      setError(err.message || "Failed to create invoice");
+const handleSubmit = async () => {
+  setError("");
+  setSuccess("");
+  if (useExistingParty && !formData.partyId)
+    return setError("Select a party");
+  if (!useExistingParty && (!formData.partyName || !formData.partyPhone))
+    return setError("Enter party details");
+  if (selectedProducts.length === 0)
+    return setError("Add at least one product");
+  try {
+    let partyId = formData.partyId;
+    if (!useExistingParty) {
+      const partyResponse = await createParty({
+        name: formData.partyName,
+        phoneNumber: formData.partyPhone,
+        place: formData.partyPlace,
+      });
+      partyId = partyResponse._id;
     }
-  };
 
+    // Console.log each product's details for verification
+    selectedProducts.forEach((item) => {
+      const product = products.find(p => p._id === item.productId) || item.newProduct;
+      const price = product?.price || 0;
+      const quantity = item.quantity;
+      const discountPercentage = item.discount || 0;
+      const itemTotalWithoutDiscount = quantity * price;
+      const discountAmount = (itemTotalWithoutDiscount * discountPercentage) / 100;
+      const itemTotal = itemTotalWithoutDiscount - discountAmount;
+
+      console.log('Product Details:');
+      console.log('Name:', product?.name);
+      console.log('Quantity:', quantity);
+      console.log('Unit Price:', price);
+      console.log('Discount Percentage:', discountPercentage + '%');
+      console.log('Total Before Discount:', itemTotalWithoutDiscount);
+      console.log('Discount Amount:', discountAmount);
+      console.log('Final Total:', itemTotal);
+      console.log('-------------------');
+    });
+
+    const invoiceData = {
+      partyId,
+      tax: formData.tax,
+      paymentStatus: formData.paymentStatus,
+      items: selectedProducts.map((item) => {
+        const product = products.find(p => p._id === item.productId) || item.newProduct;
+        const price = product?.price || 0;
+        const quantity = item.quantity;
+        const discountPercentage = item.discount || 0;
+        const itemTotalWithoutDiscount = quantity * price;
+        const discountAmount = (itemTotalWithoutDiscount * discountPercentage) / 100;
+        const itemTotal = itemTotalWithoutDiscount - discountAmount;
+
+        return {
+          productId: item.productId,
+          quantity: quantity,
+          discount: discountPercentage,
+          price: price,
+          name: product?.name || item.name,
+          total: itemTotal,
+          discountAmount: discountAmount,
+          itemTotalWithoutDiscount: itemTotalWithoutDiscount
+        };
+      }),
+      grandTotal: calculateTotal(), // Send the calculated grand total
+    };
+    
+    console.log('Sending to backend:', invoiceData);
+    const response = await createInvoice(invoiceData);
+    setSuccess("Invoice created successfully!");
+    if (response._id)
+      navigation.navigate("InvoiceDetail", { id: response._id });
+  } catch (err) {
+    setError(err.message || "Failed to create invoice");
+  }
+};
   return (
     <ScrollView
       style={styles.container}
       contentContainerStyle={styles.scrollContainer}
       keyboardShouldPersistTaps="handled"
     >
-      <Text style={styles.heading}>Create New Bill</Text>
-      {error && <Text style={styles.errorText}>{error}</Text>}
-      {success && <Text style={styles.successText}>{success}</Text>}
+     <View style={styles.rowContainer}>
+  <Text style={styles.heading}>Create New Bill</Text>
+
+  <TouchableOpacity
+    style={styles.radioButton}
+    onPress={() => handleReset()}
+  >
+ <Text style={styles.resetText}>Reset details</Text>
+  </TouchableOpacity>
+
+  
+</View>
+
+{error && <Text style={styles.errorText}>{error}</Text>}
+  {success && <Text style={styles.successText}>{success}</Text>}
+
+
+      
 
       <View style={styles.radioGroup}>
         <TouchableOpacity
@@ -464,7 +526,7 @@ function NewBillForm({ navigation }) {
                   value={product.price}
                   onChangeText={(val) => handleProductChange(index, "price", val)}
                 />
-                <TextInput
+                {/* <TextInput
                   style={styles.input}
                   placeholder="Product Discount"
                   keyboardType="numeric"
@@ -476,7 +538,7 @@ function NewBillForm({ navigation }) {
                       parseFloat(val) || 0
                     )
                   }
-                />
+                /> */}
                 <TouchableOpacity
                   style={styles.submitButton}
                   onPress={() => handleNewProductSubmit(index)}
@@ -694,6 +756,16 @@ const styles = StyleSheet.create({
     color: "white",
     fontWeight: "bold",
   },
+  rowContainer: {
+  flexDirection: 'row',
+  alignItems: 'center',
+  justifyContent: 'space-between' // optional, spreads them out
+},
+ resetText:{
+    color: "red",
+    fontWeight: "bold",
+  },
+
 });
 
 export default NewBillForm;

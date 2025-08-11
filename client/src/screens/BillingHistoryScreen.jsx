@@ -14,6 +14,7 @@ const BillingHistoryScreen = ({ navigation }) => {
   const [dateRange, setDateRange] = useState('all');
   const [sortConfig, setSortConfig] = useState({ key: 'createdAt', direction: 'desc' });
   const [expandedInvoice, setExpandedInvoice] = useState(null);
+    const [refreshing, setRefreshing] = useState(false);
 
   useEffect(() => {
     const fetchInvoices = async () => {
@@ -79,6 +80,33 @@ const BillingHistoryScreen = ({ navigation }) => {
     setSortConfig({ key, direction });
   };
 
+
+    const fetchInvoices = async () => {
+    try {
+      setLoading(true);
+      const data = await getInvoices();
+      setInvoices(data);
+      setFilteredInvoices(data);
+      setError('');
+    } catch (err) {
+      setError(err.message || 'Failed to load invoices');
+    } finally {
+      setLoading(false);
+      setRefreshing(false);
+    }
+  }
+    
+
+    const handleRefresh = () => {
+    setRefreshing(true);
+    fetchInvoices();
+  };
+
+  // Modify your useEffect to use the fetchInvoices function
+  useEffect(() => {
+    fetchInvoices();
+  }, []);
+
   const handleResetFilters = () => {
     setSearchTerm('');
     setStatusFilter('all');
@@ -142,14 +170,26 @@ const BillingHistoryScreen = ({ navigation }) => {
   const renderHeader = () => (
     <View style={styles.header}>
       <View style={styles.searchInputContainer}>
-        <Ionicons name="search" size={20} color="#9ca3af" style={styles.searchIcon} />
-        <TextInput
-          style={styles.searchInput}
-          placeholder="Search invoices..."
-          value={searchTerm}
-          onChangeText={setSearchTerm}
-        />
-      </View>
+          <Ionicons name="search" size={20} color="#9ca3af" style={styles.searchIcon} />
+          <TextInput
+            style={styles.searchInput}
+            placeholder="Search invoices..."
+            value={searchTerm}
+            onChangeText={setSearchTerm}
+          />
+        </View>
+         <TouchableOpacity 
+          style={styles.refreshButton} 
+          onPress={handleRefresh}
+          disabled={refreshing}
+        >
+          <Ionicons 
+            name="refresh" 
+            size={20} 
+            color={refreshing ? '#9ca3af' : '#3b82f6'} 
+          />
+        </TouchableOpacity>
+
       <View style={styles.filterContainer}>
         <View style={styles.filterInputContainer}>
           <Ionicons name="filter" size={20} color="#9ca3af" style={styles.filterIcon} />
@@ -529,6 +569,10 @@ const styles = StyleSheet.create({
   viewButtonText: {
     color: 'white',
     fontSize: 12,
+  },
+  refreshButton: {
+    marginLeft: 10,
+    padding: 8,
   },
 });
 
