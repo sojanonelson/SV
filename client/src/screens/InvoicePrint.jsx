@@ -7,6 +7,7 @@ import {
   TouchableOpacity,
   ActivityIndicator,
   Alert,
+  Image,
   Modal,
   Linking,
 } from "react-native";
@@ -17,6 +18,9 @@ import * as Print from "expo-print";
 import * as Sharing from "expo-sharing";
 import * as FileSystem from "expo-file-system";
 import { uploadPdf } from "../services/cloudinaryService";
+import * as ImageManipulator from 'expo-image-manipulator';
+import QRCODE from '../../assets/QR_Code.png';
+import { Asset } from 'expo-asset';
 
 function ProfessionalInvoice({ navigation, route }) {
   const [company, setCompany] = useState(null);
@@ -24,26 +28,45 @@ function ProfessionalInvoice({ navigation, route }) {
   const [loading, setLoading] = useState(true);
   const [pdfGenerating, setPdfGenerating] = useState(false);
   const [menuVisible, setMenuVisible] = useState(false);
+   const [qrCodeBase64, setQrCodeBase64] = useState('');
   const { id } = route.params;
   const invoiceRef = useRef();
+useEffect(() => {
+  const fetchData = async () => {
+    try {
+      // Get invoice data
+      const invoiceData = await getInvoice(id);
+      console.log(invoiceData);
+      setInvoice(invoiceData);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        const invoiceData = await getInvoice(id);
-        console.log(invoiceData);
-        setInvoice(invoiceData);
-        const companyData = await getCompany();
-        setCompany(companyData);
-        setLoading(false);
-      } catch (err) {
-        console.error("Error fetching data:", err);
-        setLoading(false);
-        Alert.alert("Error", "Failed to load invoice data");
+      // Get company data
+      const companyData = await getCompany();
+      setCompany(companyData);
+
+      // Load QR code as Base64
+      async function getBase64Qr() {
+        const asset = Asset.fromModule(require('../../assets/QR_Code.png'));
+        await asset.downloadAsync(); // makes sure it's local
+        const base64 = await FileSystem.readAsStringAsync(asset.localUri, {
+          encoding: FileSystem.EncodingType.Base64,
+        });
+        setQrCodeBase64(`data:image/png;base64,${base64}`);
       }
-    };
-    fetchData();
-  }, [id]);
+
+      await getBase64Qr(); // ✅ actually call it here
+
+      setLoading(false);
+    } catch (err) {
+      console.error("Error fetching data:", err);
+      setLoading(false);
+      Alert.alert("Error", "Failed to load invoice data");
+    }
+  };
+
+  fetchData();
+}, [id]);
+
+
 
   const formatDate = (dateString) => {
     return new Date(dateString).toLocaleDateString("en-IN", {
@@ -137,7 +160,7 @@ function ProfessionalInvoice({ navigation, route }) {
                   <td>${item.quantity}</td>
                   <td>${formatCurrency(item.price / item.quantity)}</td>
                   <td>${formatCurrency(item.price)}</td>
-                  <td>%${item.discount || 0}</td>
+                  <td>${item.discount || 0}%</td>
                   <td>${formatCurrency(item.total)}</td>
                 </tr>
               `
@@ -147,10 +170,7 @@ function ProfessionalInvoice({ navigation, route }) {
           </table>
 
           <div class="totals">
-            <div class="totals-row">
-              <span>Subtotal:</span>
-              <span>${formatCurrency(invoice.subtotal)}</span>
-            </div>
+           
             ${
               invoice.tax > 0
                 ? `
@@ -176,6 +196,15 @@ function ProfessionalInvoice({ navigation, route }) {
               <span><strong>${formatCurrency(invoice.total)}</strong></span>
             </div>
           </div>
+          <div style="display:flex; justify-content:flex-end; align-items:center; gap:8px; margin-top:10px;">
+          <div style="displau:flex; flex-direction:column; justify-content:center; align-items:center;">
+            <p style="font-size:12px; color:#333;">Scan QR code to pay</p>
+  <img src="${qrCodeBase64}" style="width:70px; height:70px;"></div>
+
+</div>
+
+
+
 
           <div class="terms">
             <p><strong>Terms and Conditions:</strong></p>
@@ -487,7 +516,7 @@ function ProfessionalInvoice({ navigation, route }) {
                   <Text style={styles.tableCell}>
                     {formatCurrency(item.price)}
                   </Text>
-                  <Text style={styles.tableCell}>%{item.discount || 0}</Text>
+                  <Text style={styles.tableCell}>{item.discount || 0}%</Text>
                   <Text style={styles.tableCell}>
                     {formatCurrency(item.total)}
                   </Text>
@@ -496,12 +525,12 @@ function ProfessionalInvoice({ navigation, route }) {
               
             </View>
             <View style={styles.totalsContainer}>
-              <View style={styles.totalsRow}>
+              {/* <View style={styles.totalsRow}>
                 <Text style={styles.totalsLabel}>Subtotal:</Text>
                 <Text style={styles.totalsValue}>
                   {formatCurrency(invoice.subtotal)}
                 </Text>
-              </View>
+              </View> */}
               {invoice.tax > 0 && (
                 <View style={styles.totalsRow}>
                   <Text style={styles.totalsLabel}>
@@ -527,11 +556,16 @@ function ProfessionalInvoice({ navigation, route }) {
                 </Text>
               </View>
             </View>
+            <View style={styles.QRcontainer}>
+               <Image  source={QRCODE} style={styles.QR_Code} />
+
+            </View>
+           
             <View style={styles.termsContainer}>
               <Text style={styles.termsTitle}>Terms and Conditions:</Text>
               <Text style={styles.termsText}>
                 Thank you for your business! We appreciate your trust and look
-                forward to serving you again.
+                forward to serving you again..
               </Text>
             </View>
           </View>
@@ -770,7 +804,8 @@ const styles = StyleSheet.create({
     fontSize: 12,
   },
   totalsContainer: {
-    padding: 16,
+    paddingTop:16,
+    paddingRight:10,
     borderTopWidth: 1,
     borderTopColor: "#e2e8f0",
   },
@@ -814,7 +849,18 @@ const styles = StyleSheet.create({
   },
   disabledButton: {
     opacity: 0.5,
-  },
+  },QRcontainer: {
+  flexDirection: 'row',
+  justifyContent: 'flex-end', // pushes content to the right
+  alignItems: 'center', // optional, centers vertically
+
+  padding:5
+},
+
+QR_Code: {
+  width: 60,
+  height: 60,
+}
 });
 
 export default ProfessionalInvoice;

@@ -351,12 +351,14 @@ const handleSubmit = async () => {
         </>
       ) : (
         <>
+          <Text style={styles.label}>Party name</Text>
           <TextInput
             style={styles.input}
             placeholder="Party Name"
             value={formData.partyName}
             onChangeText={(val) => setFormData({ ...formData, partyName: val })}
           />
+          <Text style={styles.label}>Phone number</Text>
           <TextInput
             style={styles.input}
             placeholder="Phone"
@@ -366,6 +368,7 @@ const handleSubmit = async () => {
               setFormData({ ...formData, partyPhone: val })
             }
           />
+          <Text style={styles.label}>Place</Text>
           <TextInput
             style={styles.input}
             placeholder="Place"
@@ -504,12 +507,14 @@ const handleSubmit = async () => {
               </>
             ) : (
               <>
+              <Text style={styles.label}>Product name</Text>
                 <TextInput
                   style={styles.input}
                   placeholder="Product Name"
                   value={product.name}
                   onChangeText={(val) => handleProductChange(index, "name", val)}
                 />
+                <Text style={styles.label}>Product weight</Text>
                 <TextInput
                   style={styles.input}
                   placeholder="Weight"
@@ -519,6 +524,7 @@ const handleSubmit = async () => {
                     handleProductChange(index, "weight", val)
                   }
                 />
+                <Text style={styles.label}>Product Price</Text>
                 <TextInput
                   style={styles.input}
                   placeholder="Price"
@@ -616,6 +622,7 @@ const styles = StyleSheet.create({
     borderWidth: 1,
     padding: 10,
     marginBottom: 10,
+    color:'#000',
     borderRadius: 4,
   },
   label: {

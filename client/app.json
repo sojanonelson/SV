@@ -27,8 +27,8 @@
       "favicon": "./assets/favicon.png"
     },
     "extra": {
-      "API_URL": "http://10.174.248.114:5000/api",
-      "APP_VERSION":"v1.0.0",
+      "API_URL": "https://billingsystem-gj4p.onrender.com/api",
+      "APP_VERSION":"v2.0.0",
       "eas": {
         "projectId": "3449ada1-eebf-4cd8-8352-83ee27977b9c"
       }

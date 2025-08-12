@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from 'react';
-import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert } from 'react-native';
+import { View, Text, TextInput, TouchableOpacity, StyleSheet, ActivityIndicator, Alert, Switch } from 'react-native';
 import { useNavigation } from '@react-navigation/native';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { Ionicons } from '@expo/vector-icons';
@@ -10,14 +10,40 @@ const API_URL = Constants.expoConfig.extra.API_URL;
 
 const LoginForm = () => {
   const [formData, setFormData] = useState({
-    email: 'sankarashibu@gmail.com',
-    password: 'Sreekala1020'
+    email: '',
+    password: ''
   });
   const [error, setError] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [companyExists, setCompanyExists] = useState(true); // Assume company exists initially
+  const [companyExists, setCompanyExists] = useState(true);
+  const [rememberMe, setRememberMe] = useState(false);
+  const [initialLoad, setInitialLoad] = useState(true);
   const navigation = useNavigation();
+
+  useEffect(() => {
+    const loadSavedCredentials = async () => {
+      try {
+        const savedEmail = await AsyncStorage.getItem('savedEmail');
+        const savedPassword = await AsyncStorage.getItem('savedPassword');
+        const rememberMeValue = await AsyncStorage.getItem('rememberMe');
+        
+        if (savedEmail && savedPassword && rememberMeValue === 'true') {
+          setFormData({
+            email: savedEmail,
+            password: savedPassword
+          });
+          setRememberMe(true);
+        }
+      } catch (err) {
+        console.error('Error loading saved credentials:', err);
+      } finally {
+        setInitialLoad(false);
+      }
+    };
+
+    loadSavedCredentials();
+  }, []);
 
   const handleChange = (name, value) => {
     setFormData({
@@ -25,8 +51,6 @@ const LoginForm = () => {
       [name]: value
     });
   };
-
-  console.log("API URLLL:", API_URL);
 
   useEffect(() => {
     const init = async () => {
@@ -59,7 +83,6 @@ const LoginForm = () => {
 
       await AsyncStorage.setItem('token', response.token);
 
-      // Check if response.company is valid before storing it
       if (response.company) {
         await AsyncStorage.setItem('user', JSON.stringify(response.company));
       } else {
@@ -67,6 +90,18 @@ const LoginForm = () => {
         setError('Company data is invalid');
         setLoading(false);
         return;
+      }
+
+      // Save credentials if "Remember Me" is checked
+      if (rememberMe) {
+        await AsyncStorage.setItem('savedEmail', formData.email);
+        await AsyncStorage.setItem('savedPassword', formData.password);
+        await AsyncStorage.setItem('rememberMe', 'true');
+      } else {
+        // Clear saved credentials if "Remember Me" is unchecked
+        await AsyncStorage.removeItem('savedEmail');
+        await AsyncStorage.removeItem('savedPassword');
+        await AsyncStorage.setItem('rememberMe', 'false');
       }
 
       await AsyncStorage.setItem('loginTime', Date.now().toString());
@@ -77,6 +112,14 @@ const LoginForm = () => {
       setLoading(false);
     }
   };
+
+  if (initialLoad) {
+    return (
+      <View style={styles.container}>
+        <ActivityIndicator size="large" color="#4f46e5" />
+      </View>
+    );
+  }
 
   return (
     <View style={styles.container}>
@@ -114,6 +157,18 @@ const LoginForm = () => {
               </TouchableOpacity>
             </View>
           </View>
+          
+          {/* Remember Me Section */}
+          <View style={styles.rememberMeContainer}>
+            <Switch
+              value={rememberMe}
+              onValueChange={setRememberMe}
+              trackColor={{ false: "#767577", true: "#4f46e5" }}
+              thumbColor={rememberMe ? "#f5dd4b" : "#f4f3f4"}
+            />
+            <Text style={styles.rememberMeText}>Remember Me</Text>
+          </View>
+          
           <TouchableOpacity style={styles.button} onPress={handleSubmit} disabled={loading}>
             {loading ? (
               <ActivityIndicator color="#fff" />
@@ -129,6 +184,7 @@ const LoginForm = () => {
     </View>
   );
 };
+
 
 const styles = StyleSheet.create({
   container: {
@@ -178,6 +234,7 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     height: 40,
+    color:'#000'
   },
   toggleButton: {
     padding: 10,
@@ -209,6 +266,14 @@ const styles = StyleSheet.create({
     marginTop: 15,
     fontSize: 16,
     fontWeight: 'bold',
+  }, rememberMeContainer: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginVertical: 10,
+  },
+  rememberMeText: {
+    marginLeft: 10,
+    color: '#374151',
   },
 });
 
