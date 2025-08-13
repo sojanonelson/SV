@@ -73,7 +73,7 @@ function ProductEdit() {
       };
       await updateProduct(id, productData);
       setSuccess('Product updated successfully!');
-      setTimeout(() => navigation.navigate('Products'), 1500);
+      
     } catch (err) {
       setError(err.message || 'Failed to update product');
     }

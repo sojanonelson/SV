@@ -226,7 +226,7 @@ function CompanyForm({ navigation }) {
           {currentStep === 2 && (
             <View style={styles.stepContent}>
               <View style={styles.inputGroup}>
-                <Text style={styles.label}><Ionicons name="document-text" size={16} color="#6b7280" /> FSSAI Number</Text>
+                <Text style={styles.label}><Ionicons name="document-text" size={16} color="#6b7280" /> FSSAI Number*</Text>
                 <TextInput
                   style={[
                     styles.input,
@@ -242,13 +242,13 @@ function CompanyForm({ navigation }) {
               </View>
 
               <View style={styles.inputGroup}>
-                <Text style={styles.label}><Ionicons name="barcode" size={16} color="#6b7280" /> GST Number</Text>
+                <Text style={styles.label}><Ionicons name="barcode" size={16} color="#6b7280" /> GST Number (optional)</Text>
                 <TextInput
                   style={[
                     styles.input,
                     validationErrors.gstNumber ? styles.errorInput : styles.validInput
                   ]}
-                  placeholder="Enter GST identification number"
+                  placeholder="Enter GST identification number "
                   value={formData.gstNumber}
                   onChangeText={text => handleChange('gstNumber', text)}
                 />
@@ -257,7 +257,7 @@ function CompanyForm({ navigation }) {
                 )}
               </View>
 
-              <View style={styles.inputGroup}>
+              {/* <View style={styles.inputGroup}>
                 <Text style={styles.label}><Ionicons name="cloud-upload" size={16} color="#6b7280" /> Company Logo URL</Text>
                 <TextInput
                   style={styles.input}
@@ -265,7 +265,7 @@ function CompanyForm({ navigation }) {
                   value={formData.logo}
                   onChangeText={text => handleChange('logo', text)}
                 />
-              </View>
+              </View> */}
             </View>
           )}
 

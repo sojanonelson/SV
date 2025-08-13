@@ -77,7 +77,7 @@ const ProductForm = (props) => {
       setSuccess('Product created successfully!');
     }
     
-    setTimeout(() => navigation.navigate('Product List'), 1500); // Changed to use hook navigation
+  
   } catch (err) {
     setError(err.message || 'Failed to save product');
   }

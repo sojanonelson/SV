@@ -514,7 +514,7 @@ const handleSubmit = async () => {
                   value={product.name}
                   onChangeText={(val) => handleProductChange(index, "name", val)}
                 />
-                <Text style={styles.label}>Product weight</Text>
+                <Text style={styles.label}>Product weight (Optional)</Text>
                 <TextInput
                   style={styles.input}
                   placeholder="Weight"
